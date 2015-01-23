@@ -1,0 +1,94 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/oracle-6.5/ks.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 4096,
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_os_type": "RedHat_64",
+	"headless": true,
+      "http_directory": "http",
+      "iso_checksum": "744826ce6924fdc93dac3f44fd825764e4de98111239a68ceb8c27be5f71cb99",
+      "iso_checksum_type": "sha256",
+      "iso_url": "/srv/images/sources/oracle.iso",
+      "shutdown_command": "echo 'cloud-user'|sudo -S /sbin/halt -h -p",
+      "ssh_password": "unsecurepass",
+      "ssh_port": 22,
+      "ssh_username": "cloud-user",
+      "ssh_wait_timeout": "10000s",
+"output_directory": "virtualbox",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "1024"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "1"
+        ]
+      ],
+      "virtualbox_version_file": ".vbox_version"
+    },
+    {
+"type":"qemu",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/oracle-6.5/ks.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 4096,
+    "accelerator": "kvm",
+    "disk_size": 4096,
+    "format": "qcow2",
+"output_directory": "qemu",
+    "headless": true,
+      "http_directory": "http",
+      "iso_checksum": "744826ce6924fdc93dac3f44fd825764e4de98111239a68ceb8c27be5f71cb99",
+      "iso_checksum_type": "sha256",
+      "iso_url": "/srv/images/sources/oracle.iso",
+    "ssh_username": "cloud-user",
+    "ssh_password": "unsecurepass",
+    "ssh_port": 22,
+    "ssh_wait_timeout": "10000s",
+    "shutdown_command": "echo 'cloud-user'|sudo -S /sbin/shutdown -hP now",
+    "qemuargs": [
+          [ "-m", "1024m" ]]
+    }
+  ],
+  "provisioners": [
+  {
+  "type": "file",
+  "source": "scripts/common.sh",
+  "destination": "/tmp/common.sh"
+  },
+  {
+  "type": "file",
+  "source": "files/centos/cloud.cfg",
+  "destination": "/tmp/cloud.cfg"
+  },
+  {
+  "type": "file",
+  "source": "scripts/firstboot.sh",
+  "destination": "/tmp/firstboot.sh"
+  },
+  {
+  "type": "shell",
+      "execute_command": "echo 'cloud-user' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+  "scripts": [
+  "scripts/openstack-yum.sh",
+  "scripts/cleanup.sh",
+  "scripts/growroot-oracle.sh"
+   ]
+  }
+  ],
+  "variables": {
+    "chef_version": "provisionerless",
+    "mirror": "http://mirrors.kernel.org/centos"
+  }
+}

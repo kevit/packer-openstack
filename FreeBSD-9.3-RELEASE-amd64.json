@@ -1,0 +1,73 @@
+{
+  "builders": [
+    {
+      "accelerator": "kvm",
+      "boot_command": [
+        "2<wait10>",
+	"<wait10>",
+        "<enter><wait>",
+        "<enter><wait>",
+        "mdmfs -s 100m md1 /tmp<enter><wait5>",
+        "mdmfs -s 100m md2 /mnt<enter><wait5>",
+        "mkdir -p /tmp/bsdinstall_etc<enter><wait>",
+        "touch /tmp/bsdinstall_etc/resolv.conf<enter><wait>",
+        "dhclient -l /tmp/dhclient.lease vtnet0<enter><wait5>",
+        "<enter>",
+        "fetch -o /tmp/setup.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/freebsd9/setup.sh<enter>",
+        "<wait5>",
+        "chmod +x /tmp/setup.sh<enter>",
+        "/tmp/setup.sh<enter>",
+        "<wait10><wait10><wait10>",
+        "<wait10><wait10><wait10>",
+        "<wait10><wait10><wait10>",
+        "fetch -o /mnt/etc/base.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/freebsd9/base.sh<enter>",
+        "chmod +x /mnt/etc/base.sh<enter>",
+        "<wait10><wait10><wait10>",
+        "<wait10><wait10><wait10>",
+        "<wait10><wait10><wait10>",
+        "reboot<enter><wait>"
+      ],
+      "iso_url": "http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/amd64/ISO-IMAGES/9.3/FreeBSD-9.3-RELEASE-amd64-disc1.iso",
+      "iso_checksum": "1fc7f8bace8dc861258af9042c9918d6",
+      "iso_checksum_type": "md5",
+      "boot_wait": "5s",
+      "disk_size": 5000,
+      "format": "qcow2",
+      "headless": true,
+      "http_directory": "http",
+      "net_device": "virtio-net",
+      "output_directory": "qemu",
+      "qemuargs": [
+        [
+          "-m",
+          "512"
+        ]
+      ],
+      "shutdown_command": "halt -p",
+      "ssh_password": "packer",
+      "ssh_username": "root",
+      "ssh_wait_timeout": "10000s",
+      "type": "qemu",
+      "vm_name": "freebsd-9-x86_64"
+
+    }
+  ],
+  "post-processors": [
+  ],
+  "provisioners": [
+    { 
+      "scripts": [
+        "scripts/freebsd9/base.sh",
+        "scripts/freebsd9/reboot.sh"
+      ],
+      "type": "shell"
+    },
+    { 
+      "scripts": [
+        "scripts/freebsd9/cleanup.sh"
+      ],
+      "pause_before": "30s",
+      "type": "shell"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "variables": {
+    "chef_version": "provisionerless",
+    "mirror": "http://cdimage.debian.org/debian-cd"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<esc><wait>",
+        "install <wait>",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/debian-7/preseed.cfg <wait>",
+        "debian-installer=en_US <wait>",
+        "auto <wait>",
+        "locale=en_US <wait>",
+        "kbd-chooser/method=us <wait>",
+        "keyboard-configuration/xkb-keymap=us <wait>",
+        "netcfg/get_hostname=vm <wait>",
+        "netcfg/get_domain=vagrant <wait>",
+        "fb=false <wait>",
+        "debconf/frontend=noninteractive <wait>",
+        "console-setup/ask_detect=false <wait>",
+        "console-keymaps-at/keymap=us <wait>",
+        "<enter><wait>"
+      ],
+      "boot_wait": "10s",
+"headless": true,
+"output_directory": "virtualbox",
+      "disk_size": 4096,
+      "guest_os_type": "Debian_64",
+      "http_directory": "http",
+    "iso_checksum": "200948e5885da3b67730293a1426845f90239c62",
+    "iso_checksum_type": "sha1",
+    "iso_url": "{{user `mirror`}}/7.5.0/amd64/iso-cd/debian-7.5.0-amd64-CD-1.iso",
+      "ssh_username": "cloud-user",
+      "ssh_password": "unsecurepass",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo 'cloud-user'|sudo -S /sbin/shutdown -hP now",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vboxmanage": [
+        [ "modifyvm", "{{.Name}}", "--memory", "1024" ],
+        [ "modifyvm", "{{.Name}}", "--cpus", "1" ]
+      ]
+    },
+    {
+    "type": "qemu",
+    "boot_command": [
+            "<esc><wait>",
+            "install <wait>",
+            "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/debian-7/preseed.cfg <wait>",
+            "debian-installer=en_US <wait>",
+            "auto <wait>",
+            "locale=en_US <wait>",
+            "kbd-chooser/method=us <wait>",
+            "keyboard-configuration/xkb-keymap=us <wait>",
+            "netcfg/get_hostname=vm <wait>",
+            "netcfg/get_domain=vagrant <wait>",
+            "fb=false <wait>",
+            "debconf/frontend=noninteractive <wait>",
+            "console-setup/ask_detect=false <wait>",
+            "console-keymaps-at/keymap=us <wait>",
+            "<enter><wait>"
+    ],
+    "accelerator": "kvm",
+"output_directory": "qemu",
+    "disk_size": 4096,
+    "format": "qcow2",
+    "headless": true,
+    "http_directory": "http",
+    "iso_checksum": "200948e5885da3b67730293a1426845f90239c62",
+    "iso_checksum_type": "sha1",
+    "iso_url": "{{user `mirror`}}/7.5.0/amd64/iso-cd/debian-7.5.0-amd64-CD-1.iso",
+    "ssh_username": "cloud-user",
+    "ssh_password": "unsecurepass",
+    "ssh_port": 22,
+    "ssh_wait_timeout": "10000s",
+    "shutdown_command": "echo 'cloud-user'|sudo -S /sbin/shutdown -hP now",
+    "boot_wait": "10s"
+    }
+  ],
+  "provisioners": [
+  {
+  "type": "file",
+  "source": "scripts/common.sh",
+  "destination": "/tmp/common.sh"
+  },
+  {
+  "type": "file",
+  "source": "scripts/firstboot.sh",
+  "destination": "/tmp/firstboot.sh"
+  },
+  {
+  "type": "file",
+  "source": "files/debian/cloud.cfg",
+  "destination": "/tmp/cloud.cfg"
+  },
+  {
+      "type": "shell",
+      "execute_command": "echo 'cloud-user' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "scripts": [
+	"scripts/debian/update.sh",
+  "scripts/openstack-debian.sh",
+  "scripts/cleanup.sh"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "builders": [
+    {
+      "accelerator": "kvm",
+      "boot_command": [
+        "2<wait10>",
+        "<enter><wait>",
+        "mdmfs -s 100m md1 /tmp<enter><wait5>",
+        "mdmfs -s 100m md2 /mnt<enter><wait5>",
+        "mkdir -p /tmp/bsdinstall_etc<enter><wait>",
+        "touch /tmp/bsdinstall_etc/resolv.conf<enter><wait>",
+        "dhclient -l /tmp/dhclient.lease vtnet0<enter><wait5>",
+        "<enter>",
+        "fetch -o /tmp/setup.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/setup.sh<enter>",
+        "<wait5>",
+        "chmod +x /tmp/setup.sh<enter>",
+        "/tmp/setup.sh<enter>",
+        "<wait10><wait10><wait10>",
+        "fetch -o /mnt/etc/base.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/base.sh<enter>",
+        "chmod +x /mnt/etc/base.sh<enter>",
+        "<wait10><wait10><wait10>",
+        "reboot<enter><wait>"
+      ],
+      "boot_wait": "5s",
+      "disk_interface": "scsi",
+      "disk_size": 5000,
+      "disk_cache": "unsafe",
+      "format": "raw",
+      "headless": true,
+      "http_directory": "http",
+      "iso_checksum": "d0d4553080b88653569e1871d57fc819",
+      "iso_checksum_type": "md5",
+      "iso_url": "http://mirror.yandex.ru/freebsd/ISO-IMAGES-amd64/10.1/FreeBSD-10.1-RELEASE-amd64-disc1.iso",
+      "net_device": "virtio-net",
+      "output_directory": "qemu/",
+      "machine_type": "pc-i440fx-1.7",
+      "qemuargs": [
+        [
+          "-m",
+          "512"
+        ],
+        [
+          "-device",
+          "virtio-scsi-pci,id=scsi0"
+        ],
+        [
+          "-drive",
+          "if=none,cache=unsafe,id=drive0,discard=unmap,file=output/freebsd-10-x86_64-qemu/freebsd-10-x86_64.raw"
+        ],
+        [
+          "-device",
+          "scsi-hd,bus=scsi0.0,drive=drive0"
+        ],
+        [
+          "-device",
+          "virtio-net,netdev=user.0"
+        ]
+      ],
+      "shutdown_command": "halt -p",
+      "ssh_password": "packer",
+      "ssh_username": "root",
+      "ssh_wait_timeout": "10000s",
+      "type": "qemu",
+      "vm_name": "freebsd-10-x86_64"
+    }
+  ],
+  "provisioners": [
+    { 
+      "scripts": [
+        "scripts/base.sh",
+        "scripts/reboot.sh"
+      ],
+      "type": "shell"
+    },
+    { 
+      "scripts": [
+        "scripts/cleanup.sh"
+      ],
+      "pause_before": "30s",
+      "type": "shell"
+    }
+  ],
+  "post-processors": [
+    [ 
+      { 
+        "type": "compress",
+        "format": "pgzip",
+        "output": "output/freebsd-10-x86_64-compress/"
+      }
+    ]
+  ]
+}

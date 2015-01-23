@@ -1,0 +1,51 @@
+{
+  "builders": [
+   {
+	   "type": "openstack",
+		   "image_name": "centos_packer_test",
+		   "source_image": "1752ccd6-b546-480e-aec5-c4ac515e6a41",
+		   "provider": "https://auth.us01.cloud.webzilla.com:5000/v2.0",
+		   "tenant_id": "919",
+		   "project": "919",
+		   "username": "1517",
+	           "password": "FyKGFPRhYSctRSYt",
+		   "ssh_username": "cloud-user",
+		   "networks": "a5044d8e-ca20-4b51-a804-7d9c0b3d26b5",
+	           "region": "us_tx_01",
+	           "flavor": "180", 
+		   "use_floating_ip": "true",
+		   "floating_ip": "206.54.184.100"
+
+} 
+  ],
+  "provisioners": [
+  {
+  "type": "file",
+  "source": "scripts/common.sh",
+  "destination": "/tmp/common.sh"
+  },
+  {
+  "type": "file",
+  "source": "files/centos/c7-cloud.cfg",
+  "destination": "/tmp/cloud1cfg"
+  },
+  {
+  "type": "file",
+  "source": "scripts/firstboot.sh",
+  "destination": "/tmp/firstboot.sh"
+  },
+  {
+  "type": "shell",
+      "execute_command": "echo 'cloud-user' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+  "scripts": [
+  "scripts/growroot.sh",
+  "scripts/openstack-yum7.sh",
+  "scripts/cleanup.sh"
+   ]
+  }
+  ],
+  "variables": {
+    "chef_version": "provisionerless",
+    "mirror": "http://mirrors.kernel.org/centos"
+  }
+}
